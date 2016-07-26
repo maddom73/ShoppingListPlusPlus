@@ -72,6 +72,7 @@ public class MainActivity extends BaseActivity {
                     String firstName = user.getName().split("\\s+")[0];
                     String title = firstName + "'s Lists";
                     setTitle(title);
+
                 }
             }
 

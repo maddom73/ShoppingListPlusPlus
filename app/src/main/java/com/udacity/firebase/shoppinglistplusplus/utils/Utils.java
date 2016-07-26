@@ -185,4 +185,9 @@ public class Utils {
         SharedPreferences teamId = context.getSharedPreferences(PREF, Context.MODE_PRIVATE);
         return teamId.getString(Constants.KEY_GOOGLE_EMAIL, null);
     }
+    public static String getUserID(Context context) {
+        SharedPreferences user_id = context.getSharedPreferences(PREF, Context.MODE_PRIVATE);
+        return user_id.getString(Constants.KEY_USER_ID, null);
+    }
+
 }

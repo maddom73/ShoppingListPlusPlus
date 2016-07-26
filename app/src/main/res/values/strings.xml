@@ -211,5 +211,6 @@
     <string name="sort_by_list_name_value">listName</string>
     <string name="sort_by_owner_value">owner</string>
     <string name="sort_by_most_recently_changed_value">timestampLastChangedReverse/timestamp</string>
+    <string name="pick_image_intent_text">Image intent</string>
 
 </resources>

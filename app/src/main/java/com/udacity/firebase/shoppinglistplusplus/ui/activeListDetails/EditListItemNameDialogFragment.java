@@ -1,6 +1,8 @@
 package com.udacity.firebase.shoppinglistplusplus.ui.activeListDetails;
 
 import android.app.Dialog;
+import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 
 import com.google.firebase.database.DatabaseError;
@@ -10,6 +12,7 @@ import com.udacity.firebase.shoppinglistplusplus.R;
 import com.udacity.firebase.shoppinglistplusplus.model.ShoppingList;
 import com.udacity.firebase.shoppinglistplusplus.model.User;
 import com.udacity.firebase.shoppinglistplusplus.utils.Constants;
+import com.udacity.firebase.shoppinglistplusplus.utils.ImagePicker;
 import com.udacity.firebase.shoppinglistplusplus.utils.Utils;
 
 import java.util.ArrayList;
@@ -102,4 +105,10 @@ public class EditListItemNameDialogFragment extends EditListDialogFragment {
 
         }
     }
+
+    @Override
+    protected void doPhotoUpload() {
+
+    }
+
 }

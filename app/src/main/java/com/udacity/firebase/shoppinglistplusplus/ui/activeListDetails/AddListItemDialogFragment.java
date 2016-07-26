@@ -1,19 +1,44 @@
 package com.udacity.firebase.shoppinglistplusplus.ui.activeListDetails;
 
+import android.Manifest;
+import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
+import android.text.TextUtils;
+import android.util.Log;
+import android.view.View;
+import android.widget.Toast;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.OnProgressListener;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 import com.udacity.firebase.shoppinglistplusplus.R;
 import com.udacity.firebase.shoppinglistplusplus.model.ShoppingList;
 import com.udacity.firebase.shoppinglistplusplus.model.ShoppingListItem;
 import com.udacity.firebase.shoppinglistplusplus.model.User;
 import com.udacity.firebase.shoppinglistplusplus.utils.Constants;
+import com.udacity.firebase.shoppinglistplusplus.utils.ImagePicker;
 import com.udacity.firebase.shoppinglistplusplus.utils.Utils;
 
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -22,6 +47,11 @@ import java.util.Map;
  * Lets user add new list item.
  */
 public class AddListItemDialogFragment extends EditListDialogFragment {
+    private static final int REQUEST_CODE_PICK_IMAGE = 1;
+    private Uri mFileUri = null;
+    private static final String KEY_FILE_URI = "key_file_uri";
+
+    DatabaseReference firebaseRef;
 
     /**
      * Public static constructor that creates fragment and passes a bundle with data into it when adapter is created
@@ -43,6 +73,15 @@ public class AddListItemDialogFragment extends EditListDialogFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (savedInstanceState != null) {
+            mFileUri = savedInstanceState.getParcelable(KEY_FILE_URI);
+        }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle out) {
+        super.onSaveInstanceState(out);
+        out.putParcelable(KEY_FILE_URI, mFileUri);
     }
 
     @Override
@@ -64,7 +103,7 @@ public class AddListItemDialogFragment extends EditListDialogFragment {
          */
         if (!mItemName.equals("")) {
 
-            DatabaseReference firebaseRef = FirebaseDatabase.getInstance()
+            firebaseRef = FirebaseDatabase.getInstance()
                     .getReferenceFromUrl(Constants.FIREBASE_URL);
             DatabaseReference itemsRef = FirebaseDatabase.getInstance()
                     .getReferenceFromUrl(Constants.FIREBASE_URL_SHOPPING_LIST_ITEMS).child(mListId);
@@ -106,4 +145,16 @@ public class AddListItemDialogFragment extends EditListDialogFragment {
             AddListItemDialogFragment.this.getDialog().cancel();
         }
     }
+
+    @Override
+    protected void doPhotoUpload() {
+        Intent chooseImageIntent = ImagePicker.getPickImageIntent(getActivity());
+        chooseImageIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        chooseImageIntent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        getActivity().startActivityForResult(chooseImageIntent, REQUEST_CODE_PICK_IMAGE);
+        //    AddListItemDialogFragment.this.getDialog().cancel();
+
+    }
+
+
 }

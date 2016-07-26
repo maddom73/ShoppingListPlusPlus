@@ -99,4 +99,9 @@ public class EditListNameDialogFragment extends EditListDialogFragment {
 
         }
     }
+
+    @Override
+    protected void doPhotoUpload() {
+
+    }
 }

@@ -2,6 +2,8 @@ package com.udacity.firebase.shoppinglistplusplus.ui.activeListDetails;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.view.KeyEvent;
@@ -16,6 +18,7 @@ import com.udacity.firebase.shoppinglistplusplus.R;
 import com.udacity.firebase.shoppinglistplusplus.model.ShoppingList;
 import com.udacity.firebase.shoppinglistplusplus.model.User;
 import com.udacity.firebase.shoppinglistplusplus.utils.Constants;
+import com.udacity.firebase.shoppinglistplusplus.utils.ImagePicker;
 
 import java.util.HashMap;
 
@@ -123,7 +126,15 @@ public abstract class EditListDialogFragment extends DialogFragment {
                          */
                         EditListDialogFragment.this.getDialog().cancel();
                     }
-                });
+                })
+        .setNeutralButton("Photo",
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+
+                        doPhotoUpload();
+                        EditListDialogFragment.this.getDialog().cancel();
+                    }
+                });;
 
         return builder.create();
     }
@@ -143,4 +154,5 @@ public abstract class EditListDialogFragment extends DialogFragment {
      * Method to be overriden with whatever edit is supposed to happen to the list
      */
     protected abstract void doListEdit();
+    protected abstract void doPhotoUpload();
 }

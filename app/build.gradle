@@ -28,6 +28,7 @@ android {
 
     buildTypes.each {
         it.buildConfigField 'String', 'UNIQUE_FIREBASE_ROOT_URL', UniqueFirebaseUrl
+        it.buildConfigField 'String', 'UNIQUE_FIREBASE_STORAGE_ROOT_URL', UniqueFirebaseStorageUrl
     }
 
     packagingOptions {
@@ -48,14 +49,15 @@ dependencies {
     compile 'com.fasterxml.jackson.core:jackson-annotations:2.5.3'
     compile 'com.fasterxml.jackson.core:jackson-databind:2.5.3'
     /* Firebase SDK */
-    compile "com.google.firebase:firebase-database:9.2.0"
-    compile "com.google.firebase:firebase-auth:9.2.0"
+    compile "com.google.firebase:firebase-database:9.2.1"
+    compile "com.google.firebase:firebase-auth:9.2.1"
+    compile 'com.google.firebase:firebase-storage:9.2.1'
 
     /* Firebase UI */
     compile 'com.firebaseui:firebase-ui:0.4.2'
 
     /* For Google Play Services */
-    compile 'com.google.android.gms:play-services-safetynet:9.2.0'
-    compile 'com.google.android.gms:play-services:9.2.0'
+    compile 'com.google.android.gms:play-services-safetynet:9.2.1'
+    compile 'com.google.android.gms:play-services:9.2.1'
 }
 apply plugin: 'com.google.gms.google-services'

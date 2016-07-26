@@ -121,6 +121,8 @@ public class LoginActivity extends BaseActivity {
                 mAuthProgressDialog.dismiss();
                 final FirebaseUser user = firebaseAuth.getCurrentUser();
                 if (user != null) {
+                    String userId = user.getUid();
+                    mSharedPrefEditor.putString(Constants.KEY_USER_ID, userId).apply();
                     Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     startActivity(intent);
