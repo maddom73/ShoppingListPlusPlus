@@ -6,7 +6,6 @@ import com.udacity.firebase.shoppinglistplusplus.BuildConfig;
  * Constants class store most important strings and paths of the app
  */
 public final class Constants {
-
     /**
      * Constants related to locations in Firebase, such as the name of the node
      * where user lists are stored (ie "userLists")
@@ -80,4 +79,8 @@ public final class Constants {
 
 
     public static final String KEY_USER_ID = "userID";
+
+    public static final String KEY_FILE_URI = "file_uri";
+
+    public static final String KEY_FILE_URI_DOWNLOAD = "file_uri_download";
 }

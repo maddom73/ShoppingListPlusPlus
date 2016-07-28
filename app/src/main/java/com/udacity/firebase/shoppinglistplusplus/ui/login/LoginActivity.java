@@ -59,7 +59,7 @@ import java.util.Map;
  * Represents Sign in screen and functionality of the app
  */
 public class LoginActivity extends BaseActivity {
-    public static String PREF = "com.udacity.firebase.shoppinglistplusplus.PREF";
+
 
     private static final String LOG_TAG = LoginActivity.class.getSimpleName();
     /* A dialog that is presented until the Firebase authentication finished. */

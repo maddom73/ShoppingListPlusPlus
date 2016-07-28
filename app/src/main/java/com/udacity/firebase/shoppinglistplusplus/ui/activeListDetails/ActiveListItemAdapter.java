@@ -3,26 +3,36 @@ package com.udacity.firebase.shoppinglistplusplus.ui.activeListDetails;
 import android.app.Activity;
 import android.content.DialogInterface;
 import android.graphics.Paint;
+import android.net.Uri;
+import android.os.Environment;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.firebase.ui.database.FirebaseListAdapter;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 import com.udacity.firebase.shoppinglistplusplus.R;
 import com.udacity.firebase.shoppinglistplusplus.model.ShoppingList;
 import com.udacity.firebase.shoppinglistplusplus.model.ShoppingListItem;
 import com.udacity.firebase.shoppinglistplusplus.model.User;
 import com.udacity.firebase.shoppinglistplusplus.utils.Constants;
+import com.udacity.firebase.shoppinglistplusplus.utils.ImageUtil;
 import com.udacity.firebase.shoppinglistplusplus.utils.Utils;
 
+import java.io.File;
 import java.util.HashMap;
 
 
@@ -34,6 +44,10 @@ public class ActiveListItemAdapter extends FirebaseListAdapter<ShoppingListItem>
     private String mListId;
     private String mEncodedEmail;
     private HashMap<String, User> mSharedWithUsers;
+    private FirebaseStorage mFirebaseStorage;
+    private StorageReference mStorageReference;
+    private StorageReference mStorageReferenceImages;
+    String imagePath, imgFile;
 
     /**
      * Public constructor that initializes private instance variables when adapter is created
@@ -44,6 +58,8 @@ public class ActiveListItemAdapter extends FirebaseListAdapter<ShoppingListItem>
         this.mActivity = activity;
         this.mListId = listId;
         this.mEncodedEmail = encodedEmail;
+
+        mFirebaseStorage = FirebaseStorage.getInstance();
     }
 
     /**
@@ -71,9 +87,13 @@ public class ActiveListItemAdapter extends FirebaseListAdapter<ShoppingListItem>
         TextView textViewItemName = (TextView) view.findViewById(R.id.text_view_active_list_item_name);
         final TextView textViewBoughtByUser = (TextView) view.findViewById(R.id.text_view_bought_by_user);
         TextView textViewBoughtBy = (TextView) view.findViewById(R.id.text_view_bought_by);
-
+        ImageView imageView = (ImageView) view.findViewById(R.id.imagePost);
         String owner = item.getOwner();
-
+        imagePath = item.getImagePath();
+        if (imagePath != null) {
+            imageView.setVisibility(View.VISIBLE);
+            ImageUtil.load(mActivity, imagePath, imageView);
+        }
         textViewItemName.setText(item.getItemName());
 
 
@@ -139,6 +159,9 @@ public class ActiveListItemAdapter extends FirebaseListAdapter<ShoppingListItem>
                         mSharedWithUsers, mShoppingList.getOwner());
             }
         });
+        if (imagePath != null) {
+            deleteFile();
+        }
     }
 
     private void setItemAppearanceBaseOnBoughtStatus(String owner, final TextView textViewBoughtByUser,
@@ -206,5 +229,27 @@ public class ActiveListItemAdapter extends FirebaseListAdapter<ShoppingListItem>
                 buttonRemoveItem.setVisibility(View.INVISIBLE);
             }
         }
+    }
+    private void deleteFile() {
+        mStorageReference = mFirebaseStorage.getReferenceFromUrl(Constants.FIREBASE_STORAGE_URL);
+        mStorageReferenceImages = mStorageReference.child("images").child(Utils.getUserID(mActivity));
+        imgFile = imagePath.replace("%2F", "").split(Utils.getUserID(mActivity))[1].split("\\?alt")[0];
+
+
+        StorageReference uploadStorageReference = mStorageReferenceImages.child(imgFile);
+        uploadStorageReference.delete().addOnSuccessListener(new OnSuccessListener() {
+            @Override
+            public void onSuccess(Object o) {
+                Log.e(mActivity.getClass().getSimpleName(),
+                        "Delete success");
+            }
+
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                Log.e(mActivity.getClass().getSimpleName(),
+                        "Delete failure");
+            }
+        });
     }
 }

@@ -189,5 +189,9 @@ public class Utils {
         SharedPreferences user_id = context.getSharedPreferences(PREF, Context.MODE_PRIVATE);
         return user_id.getString(Constants.KEY_USER_ID, null);
     }
+    public static String getFileUri(Context context) {
+        SharedPreferences file_uri = context.getSharedPreferences(PREF, Context.MODE_PRIVATE);
+        return file_uri.getString(Constants.KEY_FILE_URI, null);
+    }
 
 }

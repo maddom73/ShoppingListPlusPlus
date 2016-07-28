@@ -7,6 +7,7 @@ public class ShoppingListItem {
     private String itemName;
     private String owner;
     private String boughtBy;
+    private String imagePath;
     private boolean bought;
 
     /**
@@ -22,9 +23,10 @@ public class ShoppingListItem {
      * @param itemName
      * @param owner
      */
-    public ShoppingListItem(String itemName, String owner) {
+    public ShoppingListItem(String itemName, String owner, String imagePath) {
         this.itemName = itemName;
         this.owner = owner;
+        this.imagePath = imagePath;
         this.boughtBy = null;
         this.bought = false;
 
@@ -39,7 +41,9 @@ public class ShoppingListItem {
     public String getBoughtBy() {
         return boughtBy;
     }
-
+    public String getImagePath() {
+        return imagePath;
+    }
     public boolean isBought() {
         return bought;
     }

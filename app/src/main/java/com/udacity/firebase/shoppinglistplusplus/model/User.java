@@ -1,11 +1,16 @@
 package com.udacity.firebase.shoppinglistplusplus.model;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+import java.io.Serializable;
 import java.util.HashMap;
 
 /**
  * Defines the data structure for User objects.
  */
-public class User {
+
+public class User implements Serializable {
+
     private String name;
     private String email;
     private HashMap<String, Object> timestampJoined;

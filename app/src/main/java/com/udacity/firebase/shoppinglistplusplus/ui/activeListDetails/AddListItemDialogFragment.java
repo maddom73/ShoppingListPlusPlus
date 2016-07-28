@@ -1,6 +1,7 @@
 package com.udacity.firebase.shoppinglistplusplus.ui.activeListDetails;
 
 import android.Manifest;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -8,16 +9,21 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -35,10 +41,12 @@ import com.udacity.firebase.shoppinglistplusplus.model.ShoppingList;
 import com.udacity.firebase.shoppinglistplusplus.model.ShoppingListItem;
 import com.udacity.firebase.shoppinglistplusplus.model.User;
 import com.udacity.firebase.shoppinglistplusplus.utils.Constants;
+import com.udacity.firebase.shoppinglistplusplus.utils.FileUtil;
 import com.udacity.firebase.shoppinglistplusplus.utils.ImagePicker;
 import com.udacity.firebase.shoppinglistplusplus.utils.Utils;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -48,11 +56,13 @@ import java.util.Map;
  */
 public class AddListItemDialogFragment extends EditListDialogFragment {
     private static final int REQUEST_CODE_PICK_IMAGE = 1;
+    public static String PREF = "com.udacity.firebase.shoppinglistplusplus.PREF";
     private Uri mFileUri = null;
     private static final String KEY_FILE_URI = "key_file_uri";
-
     DatabaseReference firebaseRef;
-
+    private SharedPreferences mSharedPref;
+    private SharedPreferences.Editor mSharedPrefEditor;
+    String downloadImageUri;
     /**
      * Public static constructor that creates fragment and passes a bundle with data into it when adapter is created
      */
@@ -73,9 +83,12 @@ public class AddListItemDialogFragment extends EditListDialogFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mSharedPref = getActivity().getSharedPreferences(PREF, Context.MODE_PRIVATE);
+        mSharedPrefEditor = mSharedPref.edit();
         if (savedInstanceState != null) {
             mFileUri = savedInstanceState.getParcelable(KEY_FILE_URI);
         }
+
     }
 
     @Override
@@ -89,14 +102,19 @@ public class AddListItemDialogFragment extends EditListDialogFragment {
         /** {@link EditListDialogFragment#createDialogHelper(int)} is a
          * superclass method that creates the dialog
          **/
+
         return super.createDialogHelper(R.string.positive_button_add_list_item);
     }
 
     /**
      * Adds new item to the current shopping list
      */
+
     @Override
     protected void doListEdit() {
+        if (downloadUrl != null) {
+             downloadImageUri = downloadUrl.toString();
+        }
         String mItemName = mEditTextForList.getText().toString();
         /**
          * Adds list item if the input name is not empty
@@ -116,7 +134,7 @@ public class AddListItemDialogFragment extends EditListDialogFragment {
             String itemId = newRef.getKey();
 
             /* Make a POJO for the item and immediately turn it into a HashMap */
-            ShoppingListItem itemToAddObject = new ShoppingListItem(mItemName, mEncodedEmail);
+            ShoppingListItem itemToAddObject = new ShoppingListItem(mItemName, mEncodedEmail, downloadImageUri);
             HashMap<String, Object> itemToAdd =
                     (HashMap<String, Object>) new ObjectMapper().convertValue(itemToAddObject, Map.class);
 
@@ -142,7 +160,9 @@ public class AddListItemDialogFragment extends EditListDialogFragment {
             /**
              * Close the dialog fragment when done
              */
-            AddListItemDialogFragment.this.getDialog().cancel();
+            mSharedPrefEditor.putString(Constants.KEY_FILE_URI_DOWNLOAD , null).apply();
+
+//            AddListItemDialogFragment.this.getDialog().cancel();
         }
     }
 

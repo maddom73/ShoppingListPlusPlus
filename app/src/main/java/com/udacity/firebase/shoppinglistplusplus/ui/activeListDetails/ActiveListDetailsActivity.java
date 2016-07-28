@@ -3,13 +3,16 @@ package com.udacity.firebase.shoppinglistplusplus.ui.activeListDetails;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.DialogFragment;
+import android.app.Fragment;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.Toolbar;
@@ -51,6 +54,7 @@ import com.udacity.firebase.shoppinglistplusplus.utils.ImagePicker;
 import com.udacity.firebase.shoppinglistplusplus.utils.Utils;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -74,21 +78,19 @@ public class ActiveListDetailsActivity extends BaseActivity {
     private ShoppingList mShoppingList;
     private ValueEventListener mCurrentUserRefListener, mCurrentListRefListener, mSharedWithListener;
     private HashMap<String, User> mSharedWithUsers;
-    private ProgressDialog mProgressDialog;
-    private FirebaseStorage mFirebaseStorage;
-    private StorageReference mStorageReference;
-    private StorageReference mStorageReferenceImages;
     private static final int REQUEST_CODE_PICK_IMAGE = 1;
     private static final int PERMISSION_READ_WRITE_EXTERNAL_STORAGE = 2;
     private Uri mFileUri = null;
-
+    private SharedPreferences mSharedPref;
+    private SharedPreferences.Editor mSharedPrefEditor;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_active_list_details);
         /* Get the push ID from the extra passed by ShoppingListFragment */
-
+        mSharedPref = getSharedPreferences(PREF, Context.MODE_PRIVATE);
+        mSharedPrefEditor = mSharedPref.edit();
         Intent intent = this.getIntent();
         mListId = intent.getStringExtra(Constants.KEY_LIST_ID);
         if (mListId == null) {
@@ -108,7 +110,7 @@ public class ActiveListDetailsActivity extends BaseActivity {
                 .getReferenceFromUrl (Constants.FIREBASE_URL_LISTS_SHARED_WITH).child(mListId);
         DatabaseReference listItemsRef = FirebaseDatabase.getInstance()
                 .getReferenceFromUrl(Constants.FIREBASE_URL_SHOPPING_LIST_ITEMS).child(mListId);
-        mFirebaseStorage = FirebaseStorage.getInstance();
+
 
         /**
          * Link layout elements from XML and setup the toolbar
@@ -257,7 +259,8 @@ public class ActiveListDetailsActivity extends BaseActivity {
                         if (shoppingListItem.getOwner().equals(mEncodedEmail) && !mShopping && !shoppingListItem.isBought()) {
                             String itemName = shoppingListItem.getItemName();
                             String itemId = mActiveListItemAdapter.getRef(position).getKey();
-                            showEditListItemNameDialog(itemName, itemId);
+                            String imagePath = shoppingListItem.getImagePath();
+                            showEditListItemNameDialog(itemName, itemId, imagePath);
                             return true;
                         }
                     }
@@ -536,7 +539,7 @@ public class ActiveListDetailsActivity extends BaseActivity {
      * @param itemName
      * @param itemId
      */
-    public void showEditListItemNameDialog(String itemName, String itemId) {
+    public void showEditListItemNameDialog(String itemName, String itemId, String imagePath) {
         /* Create an instance of the dialog fragment and show it */
         DialogFragment dialog = EditListItemNameDialogFragment.newInstance(mShoppingList, itemName,
                 itemId, mListId, mEncodedEmail, mSharedWithUsers);
@@ -608,14 +611,22 @@ public class ActiveListDetailsActivity extends BaseActivity {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == RESULT_OK) {
+        if (resultCode == Activity.RESULT_OK) {
             if (requestCode == REQUEST_CODE_PICK_IMAGE) {
                 String filePath = FileUtil.getPath(this, data.getData());
                 mFileUri = Uri.fromFile(new File(filePath));
-                uploadFile(mFileUri);
+                Bitmap bitmap = ImagePicker.getImageFromResult(this, resultCode, data);
+                Fragment prev = getFragmentManager().findFragmentByTag("AddListItemDialogFragment");
+                if (prev instanceof AddListItemDialogFragment) {
+                    ((AddListItemDialogFragment) prev).mImageView.setImageBitmap(bitmap);
+
+                }
+                mSharedPrefEditor.putString(Constants.KEY_FILE_URI, mFileUri.toString()).apply();
+
             }
         }
     }
+
  /*   @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
@@ -631,103 +642,7 @@ public class ActiveListDetailsActivity extends BaseActivity {
     }*/
 
 
-    private void showProgressDialog(String title, String message) {
-        if (mProgressDialog != null && mProgressDialog.isShowing())
-            mProgressDialog.setMessage(message);
-        else
-            mProgressDialog = ProgressDialog.show(this, title, message, true, false);
-    }
 
-    private void hideProgressDialog() {
-        if (mProgressDialog != null && mProgressDialog.isShowing()) {
-            mProgressDialog.dismiss();
-        }
-    }
 
-    private void showToast(String message) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
-    }
 
-    public void showHorizontalProgressDialog(String title, String body) {
-
-        if (mProgressDialog != null && mProgressDialog.isShowing()) {
-            mProgressDialog.setTitle(title);
-            mProgressDialog.setMessage(body);
-        } else {
-            mProgressDialog = new ProgressDialog(this);
-            mProgressDialog.setTitle(title);
-            mProgressDialog.setMessage(body);
-            mProgressDialog.setIndeterminate(false);
-            mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-            mProgressDialog.setProgress(0);
-            mProgressDialog.setMax(100);
-            mProgressDialog.setCancelable(false);
-            mProgressDialog.show();
-        }
-    }
-
-    public void updateProgress(int progress) {
-        if (mProgressDialog != null && mProgressDialog.isShowing()) {
-            mProgressDialog.setProgress(progress);
-        }
-    }
-
-    private void showAlertDialog(Context ctx, String title, String body, DialogInterface.OnClickListener okListener) {
-
-        if (okListener == null) {
-            okListener = new DialogInterface.OnClickListener() {
-
-                public void onClick(DialogInterface dialog, int which) {
-                    dialog.cancel();
-                }
-            };
-        }
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(ctx).setMessage(body).setPositiveButton("OK", okListener).setCancelable(false);
-
-        if (!TextUtils.isEmpty(title)) {
-            builder.setTitle(title);
-        }
-
-        builder.show();
-    }
-
-    private void uploadFile(Uri uri) {
-        mStorageReference = mFirebaseStorage.getReferenceFromUrl(Constants.FIREBASE_STORAGE_URL);
-        mStorageReferenceImages = mStorageReference.child("images/" + Utils.getUserID(this));
-        StorageReference uploadStorageReference = mStorageReferenceImages.child(System.currentTimeMillis() + uri.getLastPathSegment());
-        final UploadTask uploadTask = uploadStorageReference.putFile(uri);
-        showHorizontalProgressDialog("Uploading", "Please wait...");
-        uploadTask
-                .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                    @Override
-                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                        hideProgressDialog();
-                        Uri downloadUrl = taskSnapshot.getDownloadUrl();
-                        Log.d("MainActivity", downloadUrl.toString());
-                        showAlertDialog(ActiveListDetailsActivity.this, "Upload Complete", downloadUrl.toString(), new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                            }
-                        });
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception exception) {
-                        exception.printStackTrace();
-                        // Handle unsuccessful uploads
-                        hideProgressDialog();
-                    }
-                })
-                .addOnProgressListener(this, new OnProgressListener<UploadTask.TaskSnapshot>() {
-                    @Override
-                    public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
-                        int progress = (int) (100 * (float) taskSnapshot.getBytesTransferred() / taskSnapshot.getTotalByteCount());
-                        Log.i("Progress", progress + "");
-                        updateProgress(progress);
-                    }
-                });
-
-    }
 }
